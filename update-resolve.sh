@@ -340,11 +340,9 @@ setup_pkgbuild() {
         updpkgsums 2>/dev/null
         ok "Updated sha256sums via updpkgsums"
     else
-        # Manual update: replace the first hash in sha256sums array
-        local old_hash
-        old_hash=$(grep -A1 "^sha256sums=" PKGBUILD | tail -1 | tr -d "' " | head -c 64)
-        if [[ -n "$old_hash" && ${#old_hash} -eq 64 ]]; then
-            sed -i "s/${old_hash}/${new_hash}/" PKGBUILD
+        # Manual update: replace only the first hash in the sha256sums array (the zip's slot)
+        if grep -q "^sha256sums=" PKGBUILD; then
+            sed -i "0,/^sha256sums=(/{s/^sha256sums=(['\"][a-f0-9]\{64\}['\"]/sha256sums=('${new_hash}'/}" PKGBUILD
             ok "Updated zip sha256sum: ${new_hash:0:16}..."
         else
             warn "Could not auto-update sha256sum. You may need to run 'updpkgsums' manually."
